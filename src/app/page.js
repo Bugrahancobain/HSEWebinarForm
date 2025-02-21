@@ -18,13 +18,23 @@ export default function Home() {
     additional: "",
   });
 
+  const [warnings, setWarnings] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+
+    const lowerValue = value.trim().toLowerCase();
+    if (["evet", "hayır", "hayir"].includes(lowerValue)) {
+      setWarnings((prev) => ({ ...prev, [name]: true }));
+    } else {
+      setWarnings((prev) => ({ ...prev, [name]: false }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true); // Form gönderimi başladı
 
     try {
       const response = await fetch("/api/saveToGoogleSheet", {
@@ -44,6 +54,8 @@ export default function Home() {
       alert(`Form gönderilirken hata oluştu: ${error.message}`);
       console.error("Hata detayı:", error);
     }
+
+    setIsSubmitting(false); // Form gönderimi bitti
 
     setFormData({
       name: "",
@@ -76,60 +88,29 @@ export default function Home() {
           <input type="text" name="school" value={formData.school} onChange={handleChange} required />
         </div>
 
-        <div className="form-group">
-          <label>IB, AP veya A-Level gibi programlardan ders aldınız mı?</label>
-          <input type="text" name="ib_ap_al" value={formData.ib_ap_al} onChange={handleChange} />
-        </div>
+        {[
+          { name: "ib_ap_al", label: "IB, AP veya A-Level gibi programlardan ders aldınız mı? Hangi dersler?" },
+          { name: "testResults", label: "IELTS, TOEFL veya Duolingo gibi sınavlardan aldığınız sonuçlar nelerdir?" },
+          { name: "research", label: "Hangi alanda akademik araştırma yaptınız? Kısaca açıklayın." },
+          { name: "projects", label: "Yer aldığınız projeleri anlatınız." },
+          { name: "internships", label: "Staj deneyimlerinizi kısaca anlatınız." },
+          { name: "competitions", label: "Katıldığınız ulusal veya uluslararası yarışmaları belirtiniz." },
+          { name: "volunteerWork", label: "Gönüllü çalışmalarda hangi alanlarda bulundunuz?" },
+          { name: "certifications", label: "Aldığınız sertifikalı dersleri açıklayınız." },
+          { name: "hobbies", label: "İlgilendiğiniz spor veya sanat dallarını belirtiniz." },
+          { name: "additional", label: "Bunun dışında belirtmek istediğiniz akademik/sosyal çalışmaları açıklayınız." },
+        ].map((field) => (
+          <div className="form-group" key={field.name}>
+            <label>{field.label}</label>{warnings[field.name] && <p style={{ color: "red" }}>🌼 Daha Açıklayıcı Yazarsanız Seviniriz. 🌼</p>}
+            <textarea name={field.name} value={formData[field.name]} onChange={handleChange}></textarea>
 
-        <div className="form-group">
-          <label>IELTS, TOEFL veya Duolingo gibi sınavlardan herhangi bir sonuç aldınız mı?</label>
-          <input type="text" name="testResults" value={formData.testResults} onChange={handleChange} />
-        </div>
-
-        <div className="form-group">
-          <label>Herhangi bir alanda akademik araştırma yaptınız mı?</label>
-          <input type="text" name="research" value={formData.research} onChange={handleChange} />
-        </div>
-
-        <div className="form-group">
-          <label>Herhangi bir projede yer aldınız mı?</label>
-          <input type="text" name="projects" value={formData.projects} onChange={handleChange} />
-        </div>
-
-        <div className="form-group">
-          <label>Herhangi bir staj deneyiminiz oldu mu?</label>
-          <input type="text" name="internships" value={formData.internships} onChange={handleChange} />
-        </div>
-
-        <div className="form-group">
-          <label>Ulusal veya uluslararası herhangi bir yarışmaya katıldınız mı?</label>
-          <input type="text" name="competitions" value={formData.competitions} onChange={handleChange} />
-        </div>
-
-        <div className="form-group">
-          <label>Gönüllü çalışmalarda bulundunuz mu?</label>
-          <input type="text" name="volunteerWork" value={formData.volunteerWork} onChange={handleChange} />
-        </div>
-
-        <div className="form-group">
-          <label>Herhangi bir alanda sertifikalı ders aldınız mı?</label>
-          <input type="text" name="certifications" value={formData.certifications} onChange={handleChange} />
-        </div>
-
-        <div className="form-group">
-          <label>İlgilendiğiniz spor veya sanat dalları var mı?</label>
-          <input type="text" name="hobbies" value={formData.hobbies} onChange={handleChange} />
-        </div>
-
-        <div className="form-group">
-          <label>Bunun dışında belirtmek istediğiniz herhangi bir akademik / sosyal çalışma var mı?</label>
-          <textarea name="additional" value={formData.additional} onChange={handleChange}></textarea>
-        </div>
-
-        <button className="form-button" type="submit">
-          Gönder
+          </div>
+        ))}
+        <button className="form-button" type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Form gönderiliyor..." : "Gönder"}
         </button>
       </form>
     </div>
   );
 }
+
